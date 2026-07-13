@@ -57,4 +57,3 @@ workflows:
 
     artifacts:
       - build/ios/iphoneos/unsigned_app.ipa
-meron
