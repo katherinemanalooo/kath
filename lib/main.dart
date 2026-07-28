@@ -16,55 +16,91 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   bool value = false;
-  Future<void> led_light(bool desmer) async{
-    String i = "";
-    if (desmer) {
-      i = "on";
+  bool clipFan = false;
+  Future<void> led_light(bool kath) async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://192.168.4.1/api/status/"),
+        body: {
+          "device": "led",
+          "state": kath ? "on" : "off",
+        },
+      );
+
+      print(response.body);
+    } catch (e) {
+      print("Error: $e");
     }
-    else{
-      i = "off";
-    }
-    final link = "http://192.168.4.1/api/status/";
-    final response = await http.post(
-        Uri.parse(link),
-        body:
-        {
-          "state" : i,
-        }
-    );
-    print(response.body);
   }
 
+  Future<void> clip_fan(bool kath) async {
+    try {
+      final response = await http.post(
+        Uri.parse("http://192.168.4.1/api/status/"),
+        body: {
+          "device": "fan",
+          "state": kath ? "on" : "off",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        print("Clip Fan: ${response.body}");
+      } else {
+        print("Failed to control Clip Fan. Status Code: ${response.statusCode}");
+        print("Response: ${response.body}");
+      }
+    } catch (e) {
+      print("Error controlling Clip Fan: $e");
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return CupertinoApp(
-      theme: CupertinoThemeData(brightness: Brightness.dark),
+      theme: const CupertinoThemeData(
+        brightness: Brightness.dark,
+      ),
       debugShowCheckedModeBanner: false,
-      home: GlassScaffold(body: SafeArea(child: ListView(children: [
-        CupertinoListSection.insetGrouped(
-          backgroundColor: CupertinoColors.transparent,
-          children: [
-            GlassContainer(child: GlassListTile(title: Text('LED NI SIR RONNIE'),
-                trailing: GlassSwitch(value: value, onChanged: (led){setState(() {
-                  value = led;
-                  led_light(value);
-                  CupertinoListSection.insetGrouped(
-                    backgroundColor: CupertinoColors.transparent,
-                    children: [
-                      GlassContainer(child: GlassListTile(title: Text('LED NI SIR RONNIE'),
-                          trailing: GlassSwitch(value: value, onChanged: (led){setState(() {
+      home: GlassScaffold(
+        body: SafeArea(
+          child: ListView(
+            children: [
+              CupertinoListSection.insetGrouped(
+                backgroundColor: CupertinoColors.transparent,
+                children: [
+                  GlassContainer(
+                    child: GlassListTile(
+                      title: const Text("LED NI SIR RONNIE"),
+                      trailing: GlassSwitch(
+                        value: value,
+                        onChanged: (led) {
+                          setState(() {
                             value = led;
-                            led_light(value);
                           });
-
-                          })),
-                      )
-                    ],);
-                });
-                })),
-            )
-          ],)
-      ],))),
+                          led_light(led);
+                        },
+                      ),
+                    ),
+                  ),
+                  GlassContainer(
+                    child: GlassListTile(
+                      title: const Text("Clip Fan"),
+                      trailing: GlassSwitch(
+                        value: clipFan,
+                        onChanged: (fan) {
+                          setState(() {
+                            clipFan = fan;
+                          });
+                          clip_fan(fan);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
